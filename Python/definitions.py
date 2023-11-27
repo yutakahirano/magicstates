@@ -1,4 +1,132 @@
 import numpy as np
+import decimal
+from decimal import Decimal
+
+class CDecimal:
+    def __init__(self, real, imag=0.0):
+        self.real = Decimal(real)
+        self.imag = Decimal(imag)
+
+    def __add__(self, other):
+        if isinstance(other, CDecimal):
+            return CDecimal(self.real + other.real, self.imag + other.imag)
+        if isinstance(other, complex):
+            return CDecimal(self.real + other.real, self.imag + other.imag)
+        assert isinstance(other, int) or isinstance(other, float) or \
+               isinstance(other, Decimal)
+        return CDecimal(self.real + Decimal(other), self.imag)
+
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __mul__(self, other):
+        if isinstance(other, CDecimal):
+            real = self.real * other.real - self.imag * other.imag
+            imag = self.real * other.imag + other.real * self.imag
+            return CDecimal(real, imag)
+        if isinstance(other, complex):
+            real = self.real * Decimal(other.real) - self.imag * Decimal(other.imag)
+            imag = self.real * Decimal(other.imag) + Decimal(other.real) * self.imag
+            return CDecimal(real, imag)
+        if isinstance(other, int) or isinstance(other, float) or \
+           isinstance(other, Decimal):
+            return CDecimal(self.real * Decimal(other), self.imag * Decimal(other))
+        return NotImplemented
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+    
+    def __neg__(self):
+        return CDecimal(-self.real, -self.imag)
+    
+    def __sub__(self, other):
+        if isinstance(other, CDecimal):
+            return CDecimal(self.real - other.real, self.imag - other.imag)
+        if isinstance(other, complex):
+            return CDecimal(self.real - other.real, self.imag - other.imag)
+        assert isinstance(other, int) or isinstance(other, float) or \
+               isinstance(other, Decimal)
+        return CDecimal(self.real - Decimal(other), self.imag)
+
+    def __rsub__(self, other):
+        return -(self.__sub__(other))
+
+    def __truediv__(self, other):
+        if isinstance(other, CDecimal):
+            real = self.real * other.real + self.imag * other.imag
+            imag = -self.real * other.imag + other.real + self.imag
+            denom = other.real * other.real + other.imag * other.imag
+            return CDecimal(real / denom, imag / denom)
+        if isinstance(other, complex):
+            real = self.real * other.real + self.imag * other.imag
+            imag = -self.real * other.imag + other.real + self.imag
+            denom = other.real * other.real + other.imag * other.imag
+            return CDecimal(real / denom, imag / denom)
+        assert isinstance(other, int) or isinstance(other, float) or \
+               isinstance(other, Decimal)
+        return CDecimal(self.real / other, self.imag / other)
+
+    def conjugate(self):
+        return CDecimal(self.real, -self.imag)
+
+
+def cos(x):
+    """Return the cosine of x as measured in radians.
+
+    The Taylor series approximation works best for a small value of x.
+    For larger values, first compute x = x % (2 * pi).
+
+    >>> print(cos(Decimal('0.5')))
+    0.8775825618903727161162815826
+    >>> print(cos(0.5))
+    0.87758256189
+    >>> print(cos(0.5+0j))
+    (0.87758256189+0j)
+
+    """
+    decimal.getcontext().prec += 2
+    i, lasts, s, fact, num, sign = 0, 0, 1, 1, 1, 1
+    while s != lasts:
+        lasts = s
+        i += 2
+        fact *= i * (i-1)
+        num *= x * x
+        sign *= -1
+        s += num / fact * sign
+    decimal.getcontext().prec -= 2
+    return +s
+
+def sin(x):
+    """Return the sine of x as measured in radians.
+
+    The Taylor series approximation works best for a small value of x.
+    For larger values, first compute x = x % (2 * pi).
+
+    >>> print(sin(Decimal('0.5')))
+    0.4794255386042030002732879352
+    >>> print(sin(0.5))
+    0.479425538604
+    >>> print(sin(0.5+0j))
+    (0.479425538604+0j)
+
+    """
+    decimal.getcontext().prec += 2
+    i, lasts, s, fact, num, sign = 1, 0, x, 1, x, 1
+    while s != lasts:
+        lasts = s
+        i += 2
+        fact *= i * (i-1)
+        num *= x * x
+        sign *= -1
+        s += num / fact * sign
+    decimal.getcontext().prec -= 2
+    return +s
+
+
+def exp_imag(angle):
+    a = Decimal(angle)
+    return CDecimal(cos(a), sin(a))
+
 
 # Pauli matrices and projector |+><+|
 x = np.array([[0, 1], [1, 0]])
@@ -7,19 +135,37 @@ z = np.array([[1, 0], [0, -1]])
 one = np.array([[1, 0], [0, 1]])
 projx = (one + x) / 2
 
+def pi():
+    decimal.getcontext().prec += 2
+    three = Decimal(3)
+    lasts, t, s, n, na, d, da = 0, three, 3, 1, 0, 0, 24
+    while s != lasts:
+        lasts = s
+        n, na = n+na, na+8
+        d, da = d+da, da+32
+        t = (t * n) / d
+        s += t
+    decimal.getcontext().prec -= 2
+    return +s
+
+sqrt_2 = np.sqrt(Decimal(2))
+sqrt_8 = np.sqrt(Decimal(8))
+decimal_pi = pi()
+
+
 # Density matrices of pure |+> states, pure magic states and pure CCZ states
-plusstate = np.dot(np.array([[1 / np.sqrt(2)], [1 / np.sqrt(2)]]), np.array([[1 / np.sqrt(2), 1 / np.sqrt(2)]]))
-magicstate = np.dot(np.array([[1 / np.sqrt(2)], [np.exp(1j * np.pi / 4) * 1 / np.sqrt(2)]]),
-                    np.array([[1 / np.sqrt(2), np.exp(-1j * np.pi / 4) * 1 / np.sqrt(2)]]))
-CCZstate = np.dot(np.array([[1 / np.sqrt(8)], [1 / np.sqrt(8)], [1 / np.sqrt(8)], [1 / np.sqrt(8)], [1 / np.sqrt(8)],
-                            [1 / np.sqrt(8)], [1 / np.sqrt(8)], [-1 / np.sqrt(8)]]), np.array([[1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                1 / np.sqrt(8),
-                                                                                                -1 / np.sqrt(8)]]))
+plusstate = np.dot(np.array([[1 / sqrt_2], [1 / sqrt_2]]), np.array([[1 / sqrt_2, 1 / sqrt_2]]))
+magicstate = np.dot(np.array([[CDecimal(1 / sqrt_2)], [exp_imag(decimal_pi / 4) * 1 / sqrt_2]]),
+                    np.array([[1 / sqrt_2, exp_imag(-decimal_pi / 4) * 1 / sqrt_2]]))
+CCZstate = np.dot(np.array([[1 / sqrt_8], [1 / sqrt_8], [1 / sqrt_8], [1 / sqrt_8], [1 / sqrt_8],
+                            [1 / sqrt_8], [1 / sqrt_8], [-1 / sqrt_8]]), np.array([[1 / sqrt_8,
+                                                                                                1 / sqrt_8,
+                                                                                                1 / sqrt_8,
+                                                                                                1 / sqrt_8,
+                                                                                                1 / sqrt_8,
+                                                                                                1 / sqrt_8,
+                                                                                                1 / sqrt_8,
+                                                                                                -1 / sqrt_8]]))
 
 
 # Computes the tensor product of a list of matrices
@@ -43,20 +189,21 @@ ideal8toCCZ = kronecker_product([CCZstate, plusstate])
 
 # Pauli product rotation e^(iP*phi), where the Pauli product P is specified by 'axis' and phi is the rotation angle
 def pauli_rot(axis, angle):
-    return np.cos(angle) * np.eye(2 ** len(axis)) + 1j * np.sin(angle) * kronecker_product(axis)
+    id = np.vectorize(lambda x: Decimal(x))(np.eye(2 ** len(axis)))
+    return cos(angle) * id + CDecimal(0, sin(angle)) * kronecker_product(axis)
 
 
 # Applies a pi/8 Pauli product rotation specified by 'axis' with probability 1-p1-p2-p3
 # A P_(pi/2) / P_(-pi/4) / P_(pi/4) error occurs with probability p1 / p2 / p3
 def apply_rot(state, axis, p1, p2, p3):
-    return (1 - p1 - p2 - p3) * np.dot(np.dot(pauli_rot(axis, np.pi / 8), state),
-                                       pauli_rot(axis, np.pi / 8).conj().transpose()) \
-           + p1 * np.dot(np.dot(pauli_rot(axis, 5 * np.pi / 8), state),
-                         pauli_rot(axis, 5 * np.pi / 8).conj().transpose()) \
-           + p2 * np.dot(np.dot(pauli_rot(axis, -1 * np.pi / 8), state),
-                         pauli_rot(axis, -1 * np.pi / 8).conj().transpose()) \
-           + p3 * np.dot(np.dot(pauli_rot(axis, 3 * np.pi / 8), state),
-                         pauli_rot(axis, 3 * np.pi / 8).conj().transpose())
+    return (1 - p1 - p2 - p3) * np.dot(np.dot(pauli_rot(axis, decimal_pi / 8), state),
+                                       pauli_rot(axis, decimal_pi / 8).conj().transpose()) \
+           + p1 * np.dot(np.dot(pauli_rot(axis, 5 * decimal_pi / 8), state),
+                         pauli_rot(axis, 5 * decimal_pi / 8).conj().transpose()) \
+           + p2 * np.dot(np.dot(pauli_rot(axis, -1 * decimal_pi / 8), state),
+                         pauli_rot(axis, -1 * decimal_pi / 8).conj().transpose()) \
+           + p3 * np.dot(np.dot(pauli_rot(axis, 3 * decimal_pi / 8), state),
+                         pauli_rot(axis, 3 * decimal_pi / 8).conj().transpose())
 
 
 # Applies a Pauli operator to a state with probability p
@@ -66,7 +213,7 @@ def apply_pauli(state, pauli, p):
 
 # Estimate of the logical error rate of a surface-code patch with code distance d and circuit-level error rate pphys
 def plog(pphys, d):
-    return 0.1 * (100 * pphys) ** ((d + 1) / 2)
+    return 1 / 10 * (100 * pphys) ** ((d + 1) / 2)
 
 
 # For the 8-to-CCZ protocol, applies X/Z storage errors to qubits 1-4 with probabilities p1-p4

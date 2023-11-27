@@ -1,8 +1,27 @@
 import numpy as np
+from decimal import Decimal
 from scipy import optimize
 from definitions import (z, one, projx, kronecker_product, apply_rot, plog,
                          storage_x_5, storage_z_5, init5qubit, ideal15to1)
 
+def apply_rot_15to1(state, axis, pphys, dx, dz, dm):
+    px = plog(pphys, dx)
+    pz = plog(pphys, dz)
+    pm = plog(pphys, dm)
+
+    assert len(axis) == 5
+    involved_qubits = [i for (i, a) in enumerate(axis) if a == z]
+    if axis[0] == one:
+        width = dz * (max(involved_qubits) - min(involved_qubits) + 1)
+        p1 = pphys / 3 + 0.5 * pm * dm
+        p2 = pphys / 3 + 0.5 * pm * dm + 0.5 * width * dx / dm * pm
+        p3 = pphys / 3
+    else:
+        width = dx + dz * max(involved_qubits)
+        p1 = phys / 3 + 0.5 * pm * dm
+        p2 = phys / 3 + 0.5 * pm * dm + 0.5 * width * dx / dm * pm
+        p3 = phys / 3
+    return apply_rot(state, axis, p1, p2, p3)
 
 # Generates the output-state density matrix of the 15-to-1 protocol
 def one_level_15to1_state(pphys, dx, dz, dm):
@@ -12,14 +31,10 @@ def one_level_15to1_state(pphys, dx, dz, dm):
     pm = plog(pphys, dm)
 
     # Step 1 of 15-to-1 protocol applying rotations 1-3 and 5
-    out = apply_rot(init5qubit, [one, z, one, one, one], pphys / 3 + 0.5 * (dm / dz) * pz * dm,
-                    pphys / 3 + 0.5 * dz * pm, pphys / 3)
-    out = apply_rot(out, [one, one, z, one, one], pphys / 3 + 0.5 * (dm / dz) * pz * dm, pphys / 3 + 0.5 * dz * pm,
-                    pphys / 3)
-    out = apply_rot(out, [one, one, one, z, one], pphys / 3 + 0.5 * (dm / dz) * pz * dm, pphys / 3 + 0.5 * dz * pm,
-                    pphys / 3)
-    out = apply_rot(out, [one, z, z, z, one], pphys / 3 + 0.5 * pm * dm,
-                    pphys / 3 + 0.5 * pm * dm + 0.5 * (3 * dz) * dx / dm * pm, pphys / 3)
+    out = apply_rot_15to1(init5qubit, [one, z, one, one, one], pphys, dx, dz, dm)
+    out = apply_rot_15to1(out, [one, one, z, one, one], pphys, dx, dz, dm)
+    out = apply_rot_15to1(out, [one, one, one, z, one], pphys, dx, dz, dm)
+    out = apply_rot_15to1(out, [one, z, z, z, one], pphys, dx, dz, dm)
 
     # Apply storage errors for dm code cycles
     out = storage_x_5(out, 0, 0.5 * (dz / dx) * px * dm, 0.5 * (dz / dx) * px * dm, 0.5 * (dz / dx) * px * dm, 0)
@@ -114,10 +129,10 @@ def cost_of_one_level_15to1(pphys, dx, dz, dm):
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return 231 / pout * d * plog(pphys, d) - 0.01
+        return 231 / float(pout) * d * plog(pphys, d[0]) - 0.01
 
     def logerr2(d):
-        return 20284 / pout * d * plog(pphys, d) - 0.01
+        return 20284 / float(pout) * d * plog(pphys, d[0]) - 0.01
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method='hybr').x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method='hybr').x[0] / 2) + 1)

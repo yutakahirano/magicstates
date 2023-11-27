@@ -16,10 +16,10 @@ def cost_of_two_level_15to1(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
 
     # Compute pl1, the output error of level-1 states
     out = one_level_15to1_state(pphys, dx, dz, dm)
-    pfail = np.real(1 - np.trace(np.dot(kronecker_product([one, projx, projx, projx, projx]), out)))
+    pfail = float(np.real(1 - np.trace(np.dot(kronecker_product([one, projx, projx, projx, projx]), out))))
     outpostsel = 1 / (1 - pfail) * np.dot(np.dot(kronecker_product([one, projx, projx, projx, projx]), out),
                                           kronecker_product([one, projx, projx, projx, projx]).conj().transpose())
-    pl1 = np.real(1 - np.trace(np.dot(outpostsel, ideal15to1)))
+    pl1 = float(np.real(1 - np.trace(np.dot(outpostsel, ideal15to1))))
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
     l1time = max(6 * dm / (nl1 / 2) / (1 - pfail), dm2)
@@ -156,10 +156,10 @@ def cost_of_two_level_15to1(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return 231 / pout * d * plog(pphys, d) - 0.01
+        return 231 / float(pout) * d * float(plog(pphys, d[0]).real) - 0.01
 
     def logerr2(d):
-        return 20284 / pout * d * plog(pphys, d) - 0.01
+        return 20284 / float(pout) * d * float(plog(pphys, d[0]).real) - 0.01
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method='hybr').x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method='hybr').x[0] / 2) + 1)
@@ -167,7 +167,7 @@ def cost_of_two_level_15to1(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
     # Print output error, failure probability, space cost, time cost and space-time cost
     nqubits = 2 * ((dx2 + 4 * dz2) * 3 * dx2 + nl1 * (
                 (dx + 4 * dz) * (3 * dx + dm2 / 2) + 2 * dm) + 20 * dm2 * dm2 + 2 * dx2 * dm2)
-    ncycles = 7.5 * l1time / (1 - pfail2)
+    ncycles = 7.5 * l1time / (1 - float(pfail2))
     print('(15-to-1)x(15-to-1) with pphys=', pphys, ', dx=', dx, ', dz=', dz, ', dm=', dm, ', dx2=', dx2, ', dz2=', dz2,
           ', dm2=', dm2, ', nl1=', nl1, sep='')
     print('Output error: ', '%.4g' % pout, sep='')

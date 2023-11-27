@@ -5,6 +5,10 @@ from twolevel8toCCZ import cost_of_two_level_8toccz
 from smallfootprint import cost_of_one_level_15to1_small_footprint
 from smallfootprint import cost_of_two_level_15to1_small_footprint
 
+import decimal
+
+decimal.getcontext().prec = 50
+
 '''
 You can use the following functions to calculate resource costs:a
 cost_of_one_level_15to1(pphys, dx, dz, dm)
@@ -19,8 +23,8 @@ print('----- pphys = 10^(-4) -----')
 cost_of_one_level_15to1(0.0001, 7, 3, 3)
 cost_of_one_level_15to1(0.0001, 9, 3, 3)
 cost_of_one_level_15to1(0.0001, 11, 5, 5)
-cost_of_two_level_20to4(0.0001, 9, 3, 3, 15, 7, 9, 4)
-# cost_of_two_level_15to1(0.0001,9,3,3,25,9,9,4)
+#cost_of_two_level_20to4(0.0001, 9, 3, 3, 15, 7, 9, 4)
+cost_of_two_level_15to1(0.0001,9,3,3,25,9,9,4)
 
 print('----- pphys = 10^(-3) -----')
 cost_of_one_level_15to1(0.001, 17, 7, 7)
