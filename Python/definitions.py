@@ -18,7 +18,7 @@ class CDecimal:
 
     def __radd__(self, other):
         return self.__add__(other)
-    
+
     def __mul__(self, other):
         if isinstance(other, CDecimal):
             real = self.real * other.real - self.imag * other.imag
@@ -35,10 +35,10 @@ class CDecimal:
 
     def __rmul__(self, other):
         return self.__mul__(other)
-    
+
     def __neg__(self):
         return CDecimal(-self.real, -self.imag)
-    
+
     def __sub__(self, other):
         if isinstance(other, CDecimal):
             return CDecimal(self.real - other.real, self.imag - other.imag)
