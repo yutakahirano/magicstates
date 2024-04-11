@@ -481,7 +481,6 @@ def cost_of_zero_plus_15to1(pphys, pout0, pfail0, dx2, dz2, dm2, dh):
     for i in range(10):
         l1time += (pfail0 ** i) * (1 - pfail0) * max(dm2, i * 5)
     l1time = max(l1time, 5 / (1 - pfail0))
-    print('l1time:', l1time)
 
     def apply_rot_zero_plus_one(state, axis1, axis2, distillation_position):
         id = [one, one, one, one, one]
