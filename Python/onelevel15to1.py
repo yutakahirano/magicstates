@@ -23,6 +23,7 @@ def apply_rot_15to1(state, axis, pphys, dx, dz, dm):
         p3 = phys / 3
     return apply_rot(state, axis, p1, p2, p3)
 
+
 # Generates the output-state density matrix of the 15-to-1 protocol
 def one_level_15to1_state(pphys, dx, dz, dm):
     # Introduce shorthand notation for logical error rate with distances dx/dz/dm
@@ -31,10 +32,14 @@ def one_level_15to1_state(pphys, dx, dz, dm):
     pm = plog(pphys, dm)
 
     # Step 1 of 15-to-1 protocol applying rotations 1-3 and 5
-    out = apply_rot_15to1(init5qubit, [one, z, one, one, one], pphys, dx, dz, dm)
-    out = apply_rot_15to1(out, [one, one, z, one, one], pphys, dx, dz, dm)
-    out = apply_rot_15to1(out, [one, one, one, z, one], pphys, dx, dz, dm)
-    out = apply_rot_15to1(out, [one, z, z, z, one], pphys, dx, dz, dm)
+    out = apply_rot(init5qubit, [one, z, one, one, one], pphys / 3 + 0.5 * (dm / dz) * pz * dm,
+                    pphys / 3 + 0.5 * dz * pm, pphys / 3)
+    out = apply_rot(out, [one, one, z, one, one], pphys / 3 + 0.5 * (dm / dz) * pz * dm, pphys / 3 + 0.5 * dz * pm,
+                    pphys / 3)
+    out = apply_rot(out, [one, one, one, z, one], pphys / 3 + 0.5 * (dm / dz) * pz * dm, pphys / 3 + 0.5 * dz * pm,
+                    pphys / 3)
+    out = apply_rot(out, [one, z, z, z, one], pphys / 3 + 0.5 * pm * dm,
+                    pphys / 3 + 0.5 * pm * dm + 0.5 * (3 * dz) * dx / dm * pm, pphys / 3)
 
     # Apply storage errors for dm code cycles
     out = storage_x_5(out, 0, 0.5 * (dz / dx) * px * dm, 0.5 * (dz / dx) * px * dm, 0.5 * (dz / dx) * px * dm, 0)

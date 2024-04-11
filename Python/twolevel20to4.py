@@ -16,10 +16,10 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
 
     # Compute pl1, the output error of level-1 states
     out = one_level_15to1_state(pphys, dx, dz, dm)
-    pfail = np.real(1 - np.trace(np.dot(kronecker_product([one, projx, projx, projx, projx]), out)))
+    pfail = float(np.real(1 - np.trace(np.dot(kronecker_product([one, projx, projx, projx, projx]), out))))
     outpostsel = 1 / (1 - pfail) * np.dot(np.dot(kronecker_product([one, projx, projx, projx, projx]), out),
                                           kronecker_product([one, projx, projx, projx, projx]).conj().transpose())
-    pl1 = np.real(1 - np.trace(np.dot(outpostsel, ideal15to1)))
+    pl1 = float(np.real(1 - np.trace(np.dot(outpostsel, ideal15to1))))
 
     # Compute l1time, the speed at which level-2 rotations can be performed (t_{L1} in the paper)
     l1time = max(6 * dm / (nl1 / 2) / (1 - pfail), dm2)
@@ -185,7 +185,7 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
                        0.5 * (dx2 / dz2) * pz2 * l1time)
 
     # Compute level-2 failure probability as the probability to measure qubits 5-7 in the |+> state
-    pfail2 = np.real(1 - np.trace(np.dot(kronecker_product([one, one, one, one, projx, projx, projx]), out2)))
+    pfail2 = float(np.real(1 - np.trace(np.dot(kronecker_product([one, one, one, one, projx, projx, projx]), out2))))
 
     # Compute the density matrix of the post-selected output state, i.e., after projecting qubits 5-7 into |+>
     outpostsel2 = 1 / (1 - pfail2) * np.dot(np.dot(kronecker_product([one, one, one, one, projx, projx, projx]), out2),
@@ -193,14 +193,14 @@ def cost_of_two_level_20to4(pphys, dx, dz, dm, dx2, dz2, dm2, nl1):
                                                 [one, one, one, one, projx, projx, projx]).conj().transpose())
 
     # Compute level-2 output error from the infidelity between the post-selected state and the ideal output state
-    pout = np.real(1 - np.trace(np.dot(outpostsel2, ideal20to4)))
+    pout = float(np.real(1 - np.trace(np.dot(outpostsel2, ideal20to4))))
 
     # Full-distance computation: determine full distance required for a 100-qubit / 10000-qubit computation
     def logerr1(d):
-        return 231 / (pout / 4) * d * plog(pphys, d) - 0.01
+        return 231 / (pout / 4) * d * float(plog(pphys, d)) - 0.01
 
     def logerr2(d):
-        return 20284 / (pout / 4) * d * plog(pphys, d) - 0.01
+        return 20284 / (pout / 4) * d * float(plog(pphys, d)) - 0.01
 
     reqdist1 = int(2 * round(optimize.root(logerr1, 3, method='hybr').x[0] / 2) + 1)
     reqdist2 = int(2 * round(optimize.root(logerr2, 3, method='hybr').x[0] / 2) + 1)

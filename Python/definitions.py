@@ -189,7 +189,7 @@ ideal8toCCZ = kronecker_product([CCZstate, plusstate])
 
 # Pauli product rotation e^(iP*phi), where the Pauli product P is specified by 'axis' and phi is the rotation angle
 def pauli_rot(axis, angle):
-    id = np.vectorize(lambda x: Decimal(x))(np.eye(2 ** len(axis)))
+    id = np.vectorize(Decimal)(np.eye(2 ** len(axis)))
     return cos(angle) * id + CDecimal(0, sin(angle)) * kronecker_product(axis)
 
 
